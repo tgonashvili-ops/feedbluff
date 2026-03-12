@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeedBluff — Social Gambling</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f;--surface:#111118;--card:#16161f;--border:#22222e;
+  --accent:#00ff88;--danger:#ff3355;--gold:#ffd700;--blue:#4488ff;
+  --purple:#9b59ff;--orange:#ff6400;--text:#e8e8f0;
+  --glow:0 0 20px rgba(0,255,136,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* AUTH SCREEN */
+.auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at center,#0d1f15 0%,var(--bg) 70%);}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;width:380px;text-align:center;}
+.auth-logo{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+.auth-sub{font-size:13px;color:#555;margin-bottom:28px;}
+.auth-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:12px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px;transition:border .2s;}
+.auth-input:focus{border-color:var(--accent);}
+.auth-btn{width:100%;padding:13px;border-radius:9px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;background:linear-gradient(135deg,var(--accent),#00cc66);color:#000;margin-bottom:8px;transition:all .2s;}
+.auth-btn:hover{transform:scale(1.02);box-shadow:var(--glow);}
+.auth-switch{font-size:12px;color:#555;cursor:pointer;margin-top:6px;}
+.auth-switch span{color:var(--accent);}
+.auth-err{font-size:12px;color:var(--danger);margin-bottom:8px;display:none;}
+.auth-demo{margin-top:16px;padding:12px;background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.15);border-radius:8px;font-size:11px;color:#666;line-height:1.6;}
+.auth-demo strong{color:var(--accent);}
+
+/* MAIN APP */
+.app{display:grid;grid-template-columns:260px 1fr 300px;grid-template-rows:60px 1fr;height:100vh;max-width:1280px;margin:0 auto;}
+.hidden{display:none!important;}
+
+/* TOPBAR */
+.topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.tbadge{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid var(--border);border-radius:18px;padding:5px 14px;display:flex;flex-direction:column;align-items:center;}
+.tbl{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1px;}
+.tbv{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;}
+.ml{color:var(--accent);}
+.mm{color:var(--gold);text-shadow:0 0 8px var(--gold);}
+.mh{color:var(--danger);animation:dpulse .6s infinite;}
+@keyframes dpulse{0%,100%{opacity:1}50%{opacity:.4}}
+.bal-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--gold);}
+.mode-sw{display:flex;gap:3px;background:var(--bg);border-radius:9px;padding:3px;border:1px solid var(--border);}
+.mbtn{padding:5px 13px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;transition:all .2s;color:#555;background:transparent;}
+.mbtn.active{background:var(--card);color:var(--text);}
+.mbtn.ms.active{color:var(--accent);}
+.mbtn.mc.active{color:var(--purple);}
+.user-pill{display:flex;align-items:center;gap:8px;}
+.logout-btn{background:none;border:1px solid var(--border);color:#555;padding:4px 10px;border-radius:8px;cursor:pointer;font-size:11px;transition:all .15s;}
+.logout-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+/* LEFT PANEL */
+.left-panel{background:var(--surface);border-right:1px solid var(--border);padding:14px;overflow-y:auto;}
+.ptitle{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#444;margin-bottom:8px;}
+.cbox{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px;margin-bottom:11px;}
+.bet-amt{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:700;color:var(--gold);margin-bottom:9px;}
+.bbgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.bbtn{background:var(--border);border:none;color:var(--text);padding:6px;border-radius:6px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.bbtn:hover{background:#2a2a3e;color:var(--accent);}
+.bbtn.active{background:rgba(0,255,136,.15);border:1px solid var(--accent);color:var(--accent);}
+.rb-wrap{background:#0a0a0f;border-radius:4px;height:6px;margin:7px 0;overflow:hidden;}
+.rb{height:100%;border-radius:4px;transition:width .4s,background .4s;background:var(--accent);}
+.rl{display:flex;justify-content:space-between;font-size:10px;color:#555;}
+.abtn{width:100%;padding:11px;border-radius:9px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;transition:all .2s;margin-bottom:6px;}
+.btn-sc{background:linear-gradient(135deg,#1a3a2a,#0d2018);border:1px solid var(--accent);color:var(--accent);}
+.btn-sc:hover:not(:disabled){background:linear-gradient(135deg,#00ff88,#00cc66);color:#000;box-shadow:var(--glow);}
+.btn-sc:disabled{opacity:.4;cursor:not-allowed;}
+.btn-op{background:linear-gradient(135deg,#3a1a1a,#200d0d);border:1px solid var(--danger);color:var(--danger);}
+.btn-op:hover:not(:disabled){background:linear-gradient(135deg,#ff3355,#cc0022);color:#fff;}
+.btn-op:disabled{opacity:.3;cursor:not-allowed;}
+.rep-score-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--purple);}
+.rep-bar-w{background:#0a0a0f;border-radius:4px;height:5px;margin:5px 0;overflow:hidden;}
+.rep-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .5s;}
+.rtag{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:4px;}
+.rt-t{background:rgba(0,255,136,.1);color:var(--accent);border:1px solid rgba(0,255,136,.2);}
+.rt-s{background:rgba(255,51,85,.1);color:var(--danger);border:1px solid rgba(255,51,85,.2);}
+.rt-n{background:rgba(68,136,255,.1);color:var(--blue);border:1px solid rgba(68,136,255,.2);}
+.spanel.off{display:none;}
+.cpanel{display:none;}
+.cpanel.on{display:block;}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;}
+.topt{padding:7px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:#555;font-size:11px;cursor:pointer;text-align:center;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.topt.sel{border-color:var(--purple);color:var(--purple);background:rgba(155,89,255,.1);}
+.ptarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:9px;font-size:12px;font-family:'DM Sans',sans-serif;resize:none;height:72px;outline:none;transition:border .2s;margin-bottom:8px;}
+.ptarea:focus{border-color:var(--purple);}
+.crows{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;}
+.crow{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:7px;border:1px solid var(--border);cursor:pointer;transition:all .15s;font-size:12px;}
+.crow.cr{border-color:var(--accent);background:rgba(0,255,136,.04);color:var(--accent);}
+.crow.ct{border-color:var(--danger);background:rgba(255,51,85,.04);color:var(--danger);}
+.cind{width:13px;height:13px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cind.on::after{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;display:block;}
+.trap-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#888;padding:4px 0;}
+.trap-val{font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;}
+.pub-btn{width:100%;padding:10px;border-radius:9px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;background:linear-gradient(135deg,#2a1a4a,#1a0d30);border:1px solid var(--purple);color:var(--purple);transition:all .2s;}
+.pub-btn:hover{background:var(--purple);color:#fff;}
+.dm-sel{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);padding:7px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:7px;}
+.dm-sbtn{width:100%;padding:8px;border-radius:7px;border:1px solid var(--orange);background:rgba(255,100,0,.05);color:var(--orange);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;transition:all .2s;margin-top:5px;}
+.dm-sbtn:hover{background:rgba(255,100,0,.15);}
+
+/* FEED */
+.feed-panel{overflow-y:auto;padding:14px;background:var(--bg);}
+.feed-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.feed-ttl{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#555;}
+.live-dot{width:7px;height:7px;background:var(--danger);border-radius:50%;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.sc-cnt{text-align:center;margin-bottom:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#333;}
+.sc-cnt span{color:var(--accent);font-size:14px;font-weight:600;}
+.feed-hint{text-align:center;padding:22px;color:#333;font-size:13px;border:1px dashed #1e1e28;border-radius:11px;}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px;margin-bottom:9px;position:relative;overflow:hidden;animation:sIn .35s ease;transition:all .2s;}
+@keyframes sIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.pcard:hover{border-color:#333350;transform:translateY(-2px);}
+.pcard.pp{border-color:rgba(155,89,255,.35);}
+.pcard.jr{border-color:var(--gold)!important;box-shadow:0 0 28px rgba(255,215,0,.22);}
+.pcard.sr{border-color:var(--danger)!important;box-shadow:0 0 28px rgba(255,51,85,.22);}
+.pcard.wr{border-color:var(--accent)!important;box-shadow:0 0 18px rgba(0,255,136,.16);}
+.pcard.inactive{opacity:.3;pointer-events:none;}
+.ptag{display:inline-block;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;padding:2px 7px;border-radius:4px;margin-right:4px;margin-bottom:7px;font-weight:700;}
+.tg-j{background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.3);}
+.tg-t{background:rgba(68,136,255,.1);color:var(--blue);border:1px solid rgba(68,136,255,.3);}
+.tg-d{background:rgba(155,89,255,.15);color:var(--purple);border:1px solid rgba(155,89,255,.4);}
+.tg-n{background:rgba(255,51,85,.1);color:var(--danger);border:1px solid rgba(255,51,85,.3);}
+.tg-m{background:rgba(0,255,136,.1);color:var(--accent);border:1px solid rgba(0,255,136,.3);}
+.tg-p{background:rgba(255,100,0,.1);color:var(--orange);border:1px solid rgba(255,100,0,.3);}
+.tg-pl{background:rgba(155,89,255,.15);color:var(--purple);border:1px solid rgba(155,89,255,.4);}
+.phdr{display:flex;align-items:center;gap:9px;margin-bottom:7px;}
+.av{width:33px;height:33px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.puser{font-size:12px;font-weight:600;}
+.ptime{font-size:10px;color:#555;}
+.pcont{font-size:12px;color:#aaa;line-height:1.55;margin-bottom:8px;}
+.pcont strong{color:var(--text);}
+.pstats{display:flex;gap:12px;font-size:10px;color:#555;}
+.prwb{position:absolute;top:9px;right:9px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;opacity:0;transform:scale(.8);transition:all .3s;}
+.jr .prwb,.wr .prwb,.sr .prwb{opacity:1;transform:scale(1);}
+.jr .prwb{background:rgba(255,215,0,.15);color:var(--gold);border:1px solid var(--gold);}
+.wr .prwb{background:rgba(0,255,136,.15);color:var(--accent);border:1px solid var(--accent);}
+.sr .prwb{background:rgba(255,51,85,.15);color:var(--danger);border:1px solid var(--danger);}
+
+/* RIGHT PANEL */
+.right-panel{background:var(--surface);border-left:1px solid var(--border);padding:14px;overflow-y:auto;}
+.tab-bar{display:flex;gap:3px;margin-bottom:12px;background:var(--bg);border-radius:7px;padding:3px;border:1px solid var(--border);}
+.tab{flex:1;padding:5px;text-align:center;font-size:10px;color:#555;border-radius:5px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1px;}
+.tab.active{background:var(--card);color:var(--text);}
+.sec{display:none;}
+.sec.active{display:block;}
+.aitem{display:flex;align-items:flex-start;gap:7px;padding:7px 0;border-bottom:1px solid #1a1a22;animation:fIn .3s ease;}
+@keyframes fIn{from{opacity:0}to{opacity:1}}
+.aico{width:25px;height:25px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;background:var(--card);}
+.atxt{font-size:11px;color:#aaa;line-height:1.4;}
+.atxt strong{color:var(--text);}
+.win{color:var(--accent);}
+.loss{color:var(--danger);}
+.trap-c{color:var(--orange);}
+.atm{font-size:9px;color:#444;margin-top:2px;}
+.lbrow{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #1a1a22;}
+.lbrank{font-family:'JetBrains Mono',monospace;font-size:11px;color:#555;width:22px;}
+.lbrank.gld{color:var(--gold);}
+.lbname{flex:1;font-size:12px;}
+.lbamt{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);}
+.mprow{padding:9px 0;border-bottom:1px solid #1a1a22;}
+.mpttl{font-size:12px;font-weight:600;margin-bottom:4px;}
+.mpst{display:flex;gap:9px;font-size:10px;color:#666;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center;}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);}
+.stat-lbl{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+/* OVERLAYS */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.ov.show{display:flex;}
+.rbox{background:var(--card);border-radius:18px;padding:34px;text-align:center;max-width:330px;width:90%;animation:pIn .4s cubic-bezier(.34,1.56,.64,1);border:1px solid var(--border);}
+@keyframes pIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.remi{font-size:56px;margin-bottom:12px;}
+.rttl{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;margin-bottom:5px;}
+.ramt{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;margin-bottom:8px;}
+.rdesc{font-size:12px;color:#888;margin-bottom:6px;}
+.rrep{font-size:11px;margin-bottom:6px;padding:4px 10px;border-radius:7px;display:inline-block;}
+.rr-up{background:rgba(0,255,136,.1);color:var(--accent);}
+.rr-dn{background:rgba(255,51,85,.1);color:var(--danger);}
+.rpf{font-size:10px;color:#444;margin-bottom:18px;font-family:'JetBrains Mono',monospace;}
+.rbtn{background:var(--accent);color:#000;border:none;padding:11px 34px;border-radius:9px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.rbtn:hover{transform:scale(1.05);box-shadow:var(--glow);}
+.rbtn.dng{background:var(--danger);color:#fff;}
+.dmbox{background:var(--card);border:1px solid rgba(155,89,255,.5);border-radius:18px;padding:28px;max-width:350px;width:90%;animation:pIn .35s ease;}
+.dmbttl{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--purple);letter-spacing:2px;margin-bottom:4px;}
+.dmbfrom{font-size:11px;color:#888;margin-bottom:13px;}
+.dmbmsg{background:var(--bg);border-radius:9px;padding:13px;font-size:12px;color:#ccc;line-height:1.6;margin-bottom:16px;border:1px solid var(--border);}
+.dmbmsg strong{color:var(--purple);}
+.dmacts{display:flex;gap:7px;}
+.dmact{flex:1;padding:9px;border-radius:7px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;transition:all .15s;}
+.dma-tr{background:rgba(0,255,136,.1);color:var(--accent);border:1px solid rgba(0,255,136,.3);}
+.dma-tr:hover{background:rgba(0,255,136,.2);}
+.dma-ig{background:rgba(255,255,255,.03);color:#555;border:1px solid var(--border);}
+.dma-ig:hover{color:#888;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px 22px;font-size:12px;color:var(--text);z-index:300;transition:transform .4s ease;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.loading{opacity:.5;pointer-events:none;}
+.conn-badge{font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(0,255,136,.1);color:var(--accent);border:1px solid rgba(0,255,136,.2);}
+.conn-badge.off{background:rgba(255,51,85,.1);color:var(--danger);border-color:rgba(255,51,85,.2);}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">FeedBluff</div>
+    <div class="auth-sub">Social Media Gambling — Demo v2.0</div>
+    <div class="auth-err" id="authErr"></div>
+    <input class="auth-input" id="authUser" type="text" placeholder="Username" value="GoldRush88">
+    <input class="auth-input" id="authPass" type="password" placeholder="Password" value="demo123">
+    <button class="auth-btn" id="authSubmitBtn" onclick="submitAuth()">LOGIN</button>
+    <div class="auth-switch">Don't have an account? <span onclick="toggleAuthMode()">Register</span></div>
+    <div class="auth-demo">
+      <strong>Demo Accounts:</strong><br>
+      GoldRush88 / LuckyJan / Pro_Dealer<br>
+      Password: <strong>demo123</strong>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="app hidden">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="logo">Feed<span style="color:var(--danger)">Bluff</span></div>
+    <div style="display:flex;gap:9px;align-items:center;">
+      <div class="mode-sw">
+        <button class="mbtn ms active" onclick="setMode('s',this)">🎮 Scroller</button>
+        <button class="mbtn mc" onclick="setMode('c',this)">✍️ Creator</button>
+      </div>
+      <div class="tbadge"><div class="tbl">Multiplier</div><div class="tbv ml" id="multD">x1.0</div></div>
+      <div class="tbadge"><div class="tbl">Risk</div><div class="tbv" id="riskL" style="color:var(--blue)">LOW</div></div>
+      <div class="conn-badge" id="connBadge">● LIVE</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="tbadge"><div class="tbl">Balance</div><div class="bal-val" id="balD">€0</div></div>
+      <div class="user-pill">
+        <span style="font-size:12px;color:#888" id="usernameD">-</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LEFT PANEL -->
+  <aside class="left-panel">
+    <div class="spanel" id="spanel">
+      <div class="ptitle">Your Bet</div>
+      <div class="cbox">
+        <div style="font-size:11px;color:#888;margin-bottom:5px">Stake</div>
+        <div class="bet-amt" id="betD">€10</div>
+        <div class="bbgrid">
+          <button class="bbtn" onclick="setBet(5,this)">€5</button>
+          <button class="bbtn active" onclick="setBet(10,this)">€10</button>
+          <button class="bbtn" onclick="setBet(25,this)">€25</button>
+          <button class="bbtn" onclick="setBet(50,this)">€50</button>
+          <button class="bbtn" onclick="setBet(100,this)">€100</button>
+          <button class="bbtn" onclick="setBet(250,this)">€250</button>
+        </div>
+      </div>
+      <div class="cbox">
+        <div style="font-size:11px;color:#888;margin-bottom:4px">Scroll Risk</div>
+        <div class="rb-wrap"><div class="rb" id="riskB" style="width:0%"></div></div>
+        <div class="rl"><span>Safe</span><span id="riskP">0%</span><span>Danger</span></div>
+      </div>
+      <button class="abtn btn-sc" id="scrollBtn" onclick="doScroll()">▼ SCROLL FEED</button>
+      <button class="abtn btn-op" id="openBtn" onclick="openPost()" disabled>⚡ OPEN TOP POST</button>
+      <div style="margin-top:12px">
+        <div class="ptitle">Reputation</div>
+        <div class="cbox">
+          <div class="rep-score-val" id="repS">50</div>
+          <div class="rep-bar-w"><div class="rep-bar" id="repB" style="width:50%"></div></div>
+          <div style="font-size:10px;color:#555;margin-top:3px">Reputation Score</div>
+          <div class="rtag rt-n" id="repT">🔵 Neutral Player</div>
+          <div style="font-size:10px;color:#555;margin-top:6px" id="repDesc">Play more to build your reputation</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cpanel" id="cpanel">
+      <div class="ptitle">Create Post</div>
+      <div class="cbox">
+        <div style="font-size:11px;color:#888;margin-bottom:7px">Post Type</div>
+        <div class="type-grid">
+          <div class="topt sel" data-t="jackpot" onclick="selType(this)">💰 Jackpot</div>
+          <div class="topt" data-t="trending" onclick="selType(this)">📈 Trending</div>
+          <div class="topt" data-t="news" onclick="selType(this)">🚨 Breaking</div>
+          <div class="topt" data-t="meme" onclick="selType(this)">😂 Meme</div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-bottom:5px">Your Message</div>
+        <textarea class="ptarea" id="postTxt" placeholder="Write convincingly… or deceive 😈"></textarea>
+        <div class="crows">
+          <div class="crow cr" id="cr-real" onclick="selContent('real')">
+            <div class="cind on" id="ci-real"></div>
+            <div><div style="font-weight:600">Real Jackpot</div><div style="color:#888;font-size:10px;margin-top:1px">Fee €5. Reward shared if opened.</div></div>
+          </div>
+          <div class="crow" id="cr-trap" onclick="selContent('trap')">
+            <div class="cind" id="ci-trap"></div>
+            <div><div style="font-weight:600">Trap 😈</div><div style="color:#888;font-size:10px;margin-top:1px">Fee €10. Earn from victims.</div></div>
+          </div>
+        </div>
+        <div class="trap-row"><span>Trap Payout/Victim:</span><span class="trap-val" id="trapV">€10</span></div>
+        <div class="bbgrid" style="margin-bottom:9px">
+          <button class="bbtn" onclick="setTrap(10)">€10</button>
+          <button class="bbtn" onclick="setTrap(25)">€25</button>
+          <button class="bbtn" onclick="setTrap(50)">€50</button>
+          <button class="bbtn" onclick="setTrap(100)">€100</button>
+        </div>
+        <button class="pub-btn" id="pubBtn" onclick="publishPost()">📤 PUBLISH (-€5)</button>
+      </div>
+
+      <div class="ptitle">DM Troll</div>
+      <div class="cbox">
+        <div style="font-size:11px;color:#888;margin-bottom:7px">Send fake tip:</div>
+        <select class="dm-sel" id="dmTgt">
+          <option>Alex K.</option><option>Maria S.</option>
+          <option>BigBet Tom</option><option>LuckyJan</option>
+          <option>Pro_Dealer</option><option>NightOwl</option>
+        </select>
+        <textarea class="ptarea" id="dmTxt" style="height:55px" placeholder="Write your fake tip…"></textarea>
+        <button class="dm-sbtn" onclick="sendDM()">✉️ SEND DM TROLL (-€3)</button>
+      </div>
+
+      <div class="ptitle">Reputation</div>
+      <div class="cbox">
+        <div class="rep-score-val" id="repS2">50</div>
+        <div class="rep-bar-w"><div class="rep-bar" id="repB2" style="width:50%"></div></div>
+        <div class="rtag rt-n" id="repT2" style="margin-top:5px">🔵 Neutral Creator</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- FEED -->
+  <main class="feed-panel">
+    <div class="feed-hdr">
+      <div class="feed-ttl">🔴 LIVE FEED</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555">
+        <div class="live-dot"></div><span id="onlineC">2,847 online</span>
+      </div>
+    </div>
+    <div class="sc-cnt">Scrolled <span id="scD">0</span> posts this round</div>
+    <div id="feedC"><div class="feed-hint">Login and scroll to start playing 🎮</div></div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('actSec',this)">Activity</div>
+      <div class="tab" onclick="switchTab('lbSec',this)">Leaders</div>
+      <div class="tab" onclick="switchTab('mpSec',this)">My Posts</div>
+      <div class="tab" onclick="switchTab('statSec',this)">Stats</div>
+    </div>
+    <div class="sec active" id="actSec">
+      <div class="ptitle">Live Activity</div>
+      <div id="actF"></div>
+    </div>
+    <div class="sec" id="lbSec">
+      <div class="ptitle">Top Winners</div>
+      <div id="lbL"></div>
+    </div>
+    <div class="sec" id="mpSec">
+      <div class="ptitle">Your Posts</div>
+      <div id="mpL"><div style="font-size:12px;color:#444;padding:10px 0">Switch to Creator mode to post!</div></div>
+    </div>
+    <div class="sec" id="statSec">
+      <div class="ptitle">Your Stats</div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-val" id="st-rounds">0</div><div class="stat-lbl">Rounds</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-wr">0%</div><div class="stat-lbl">Win Rate</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-won" style="color:var(--accent)">€0</div><div class="stat-lbl">Total Won</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-lost" style="color:var(--danger)">€0</div><div class="stat-lbl">Total Lost</div></div>
+        <div class="stat-card" style="grid-column:1/-1"><div class="stat-val" id="st-big" style="color:var(--gold)">€0</div><div class="stat-lbl">Biggest Win</div></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="ov" id="resOv">
+  <div class="rbox">
+    <div class="remi" id="rEmi">🎰</div>
+    <div class="rttl" id="rTtl">WIN!</div>
+    <div class="ramt" id="rAmt">+€0</div>
+    <div class="rdesc" id="rDesc"></div>
+    <div class="rrep" id="rRep" style="display:none"></div>
+    <div class="rpf" id="rPF"></div>
+    <button class="rbtn" id="rBtn" onclick="closeResult()">PLAY AGAIN</button>
+  </div>
+</div>
+
+<!-- DM OVERLAY -->
+<div class="ov" id="dmOv">
+  <div class="dmbox">
+    <div class="dmbttl">📨 NEW MESSAGE</div>
+    <div class="dmbfrom" id="dmFrom">From: ???</div>
+    <div class="dmbmsg" id="dmMsg">…</div>
+    <div class="dmacts">
+      <button class="dmact dma-tr" onclick="respondDM(true)">TRUST IT 🤞</button>
+      <button class="dmact dma-ig" onclick="respondDM(false)">IGNORE 🚫</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Done!</div>
+
+<script>
+const API = '/api';
+let token = localStorage.getItem('fb_token') || '';
+let currentUser = null;
+let bet = 10;
+let scrollDepth = 0;
+let multiplier = 1.0;
+let canOpen = false;
+let currentPosts = [];
+let mode = 's';
+let contentType = 'real';
+let postType = 'jackpot';
+let trapStake = 10;
+let dmIsTrap = false;
+let dmSenderId = '';
+let isAuthMode = 'login';
+
+// ── API HELPER ──
+async function api(endpoint, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(API + endpoint, opts);
+    return await r.json();
+  } catch(e) {
+    return { error: 'Connection failed. Is the server running?' };
+  }
+}
+
+// ── AUTH ──
+function toggleAuthMode() {
+  isAuthMode = isAuthMode === 'login' ? 'register' : 'login';
+  document.getElementById('authSubmitBtn').textContent = isAuthMode === 'login' ? 'LOGIN' : 'REGISTER';
+  document.querySelector('.auth-switch span').textContent = isAuthMode === 'login' ? 'Register' : 'Login';
+}
+
+async function submitAuth() {
+  const username = document.getElementById('authUser').value.trim();
+  const password = document.getElementById('authPass').value.trim();
+  const errEl = document.getElementById('authErr');
+  errEl.style.display = 'none';
+  if (!username || !password) { errEl.textContent = 'Fill in all fields'; errEl.style.display = 'block'; return; }
+
+  const endpoint = isAuthMode === 'login' ? '/auth/login' : '/auth/register';
+  const res = await api(endpoint, 'POST', { username, password });
+  if (res.error) { errEl.textContent = res.error; errEl.style.display = 'block'; return; }
+
+  token = res.token;
+  localStorage.setItem('fb_token', token);
+  currentUser = res.user;
+  enterApp();
+}
+
+function logout() {
+  token = ''; localStorage.removeItem('fb_token'); currentUser = null;
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('authScreen').style.display = 'flex';
+  resetRound();
+}
+
+function enterApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('mainApp').classList.remove('hidden');
+  updateUserUI();
+  loadLeaderboard();
+  loadMyPosts();
+  loadStats();
+  connectSSE();
+  seedActivity();
+}
+
+// ── AUTO-LOGIN IF TOKEN EXISTS ──
+async function tryAutoLogin() {
+  if (!token) return;
+  const res = await api('/user/me');
+  if (res.user) { currentUser = res.user; enterApp(); }
+  else { token = ''; localStorage.removeItem('fb_token'); }
+}
+
+// ── UI UPDATES ──
+function updateUserUI() {
+  if (!currentUser) return;
+  document.getElementById('usernameD').textContent = currentUser.username;
+  document.getElementById('balD').textContent = '€' + currentUser.balance.toLocaleString();
+  updateRep(currentUser.reputation);
+}
+
+function updateRep(rep) {
+  rep = Math.max(0, Math.min(100, rep));
+  ['repS','repS2'].forEach(id => { const e = document.getElementById(id); if(e) e.textContent = rep; });
+  ['repB','repB2'].forEach(id => { const e = document.getElementById(id); if(e) e.style.width = rep + '%'; });
+  let tag, cls;
+  if (rep >= 70) { tag = '⭐ Trusted'; cls = 'rt-t'; }
+  else if (rep >= 40) { tag = '🔵 Neutral'; cls = 'rt-n'; }
+  else { tag = '⚠️ Suspicious'; cls = 'rt-s'; }
+  ['repT','repT2'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) { e.textContent = tag + (id === 'repT2' ? ' Creator' : ' Player'); e.className = 'rtag ' + cls; }
+  });
+  const d = document.getElementById('repDesc');
+  if (d) {
+    if (rep >= 70) d.textContent = 'Your posts appear near top of the feed';
+    else if (rep >= 40) d.textContent = 'Play more to build your reputation';
+    else d.textContent = '⚠️ Your posts are flagged as suspicious';
+  }
+  if (currentUser) currentUser.reputation = rep;
+}
+
+function updateMult(sd, mult) {
+  scrollDepth = sd; multiplier = mult;
+  const risk = Math.min(100, sd * 18);
+  document.getElementById('scD').textContent = sd;
+  document.getElementById('multD').textContent = 'x' + mult.toFixed(1);
+  document.getElementById('riskB').style.width = risk + '%';
+  document.getElementById('riskP').textContent = risk + '%';
+  const el = document.getElementById('multD');
+  const rl = document.getElementById('riskL');
+  if (risk > 70) {
+    document.getElementById('riskB').style.background = 'var(--danger)';
+    rl.textContent = 'DANGER'; rl.style.color = 'var(--danger)'; el.className = 'tbv mh';
+  } else if (risk > 40) {
+    document.getElementById('riskB').style.background = 'var(--gold)';
+    rl.textContent = 'MEDIUM'; rl.style.color = 'var(--gold)'; el.className = 'tbv mm';
+  } else {
+    document.getElementById('riskB').style.background = 'var(--accent)';
+    rl.textContent = 'LOW'; rl.style.color = 'var(--blue)'; el.className = 'tbv ml';
+  }
+}
+
+// ── GAME ACTIONS ──
+function setBet(a, btn) {
+  bet = a;
+  document.getElementById('betD').textContent = '€' + a;
+  document.querySelectorAll('.bbtn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+async function doScroll() {
+  if (!currentUser) return;
+  const btn = document.getElementById('scrollBtn');
+  btn.classList.add('loading');
+  const res = await api('/game/scroll', 'POST');
+  btn.classList.remove('loading');
+  if (res.error) { showToast('❌ ' + res.error); return; }
+
+  updateMult(res.scrollDepth, res.multiplier);
+  renderPost(res.post);
+  canOpen = true;
+  document.getElementById('openBtn').disabled = false;
+
+  // Random incoming DM
+  if (Math.random() < 0.12 && scrollDepth >= 2) setTimeout(showInDM, 1000);
+}
+
+async function openPost() {
+  if (!canOpen) return;
+  const btn = document.getElementById('openBtn');
+  btn.disabled = true;
+  const res = await api('/game/open', 'POST', { bet });
+  if (res.error) { showToast('❌ ' + res.error); btn.disabled = false; return; }
+
+  // Reveal top card
+  const topCard = document.querySelector('.pcard:not(.inactive)');
+  if (topCard) {
+    const cc = res.outcome === 'jackpot' ? 'jr' : res.outcome === 'win' ? 'wr' : 'sr';
+    topCard.classList.add(cc);
+    const badge = topCard.querySelector('.prwb');
+    if (badge) {
+      const ch = res.balanceChange;
+      badge.textContent = (ch >= 0 ? '+' : '') + '€' + Math.abs(ch);
+    }
+    document.querySelectorAll('.pcard').forEach(c => { if (!c.classList.contains(cc)) c.classList.add('inactive'); });
+  }
+
+  canOpen = false;
+  currentUser.balance = res.newBalance;
+  document.getElementById('balD').textContent = '€' + res.newBalance.toLocaleString();
+  updateRep(res.newReputation);
+
+  setTimeout(() => showResult(res), 400);
+}
+
+function showResult(res) {
+  const oc = res.outcome;
+  const emojis = { jackpot:'💰', win:'🎯', troll:'😤', scam:'💀', empty:'🙁' };
+  const labels = { jackpot:'JACKPOT!', win:'WIN!', troll:'TROLLED', scam:'SCAMMED!', empty:'NOTHING' };
+  const colors = { jackpot:'var(--gold)', win:'var(--accent)', troll:'#ff9900', scam:'var(--danger)', empty:'#888' };
+  const ch = res.balanceChange;
+
+  document.getElementById('rEmi').textContent = emojis[oc] || '🎰';
+  document.getElementById('rTtl').textContent = labels[oc] || oc.toUpperCase();
+  document.getElementById('rTtl').style.color = colors[oc] || '#888';
+  document.getElementById('rAmt').textContent = (ch >= 0 ? '+' : '') + '€' + Math.abs(ch);
+  document.getElementById('rAmt').style.color = colors[oc] || '#888';
+  document.getElementById('rDesc').textContent = 'Multiplier ×' + res.multiplier.toFixed(1) + ' — Scroll depth ' + res.scrollDepth;
+
+  const rr = document.getElementById('rRep');
+  if (res.repChange !== 0) {
+    rr.textContent = (res.repChange > 0 ? '⭐ +' : '⬇️ ') + res.repChange + ' Reputation';
+    rr.className = 'rrep ' + (res.repChange > 0 ? 'rr-up' : 'rr-dn');
+    rr.style.display = 'inline-block';
+  } else rr.style.display = 'none';
+
+  const pf = document.getElementById('rPF');
+  if (res.provablyFair) {
+    pf.textContent = '🔐 Seed: ' + res.provablyFair.serverSeedHash.slice(0, 20) + '…';
+  }
+
+  document.getElementById('rBtn').className = ch >= 0 ? 'rbtn' : 'rbtn dng';
+  document.getElementById('resOv').classList.add('show');
+  loadStats();
+}
+
+function closeResult() {
+  document.getElementById('resOv').classList.remove('show');
+  resetRound();
+}
+
+function resetRound() {
+  scrollDepth = 0; multiplier = 1.0; canOpen = false; currentPosts = [];
+  document.getElementById('scD').textContent = '0';
+  document.getElementById('openBtn').disabled = true;
+  updateMult(0, 1.0);
+  document.getElementById('feedC').innerHTML = '<div class="feed-hint">Place your bet and scroll to start 🎮</div>';
+}
+
+// ── POST RENDERING ──
+const TYPE_TAGS = { jackpot:'tg-j', trending:'tg-t', dm:'tg-d', news:'tg-n', meme:'tg-m', phishing:'tg-p' };
+const TYPE_LABELS = { jackpot:'💰 JACKPOT', trending:'📈 TRENDING', dm:'✉️ DIRECT MSG', news:'🚨 BREAKING', meme:'😂 MEME', phishing:'🎣 SUSPICIOUS' };
+const TYPE_BG = { jackpot:'#2a1a00', trending:'#001a3a', dm:'#1a003a', news:'#2a000a', phishing:'#2a1000', meme:'#001a00' };
+const TYPE_EM = { jackpot:'💰', trending:'📊', dm:'📨', news:'📰', phishing:'🎣', meme:'😂' };
+
+function renderPost(post) {
+  const fc = document.getElementById('feedC');
+  const hint = fc.querySelector('.feed-hint');
+  if (hint) hint.remove();
+
+  document.querySelectorAll('.pcard:not(.jr):not(.sr):not(.wr)').forEach((c, i) => { if (i > 0) c.classList.add('inactive'); });
+
+  const t = post.type || 'jackpot';
+  const card = document.createElement('div');
+  card.className = 'pcard' + (post.isPlayerPost ? ' pp' : '');
+  card.id = 'pc_' + post.id;
+  card.innerHTML =
+    '<div style="margin-bottom:7px">' +
+      '<span class="ptag ' + (TYPE_TAGS[t] || 'tg-j') + '">' + (TYPE_LABELS[t] || t.toUpperCase()) + '</span>' +
+      (post.isPlayerPost ? '<span class="ptag tg-pl">👤 Player Post</span>' : '') +
+    '</div>' +
+    '<div class="phdr">' +
+      '<div class="av" style="background:' + (TYPE_BG[t] || '#1a1a1a') + '">' + (post.emoji || TYPE_EM[t] || '📝') + '</div>' +
+      '<div><div class="puser">' + (post.user || 'Anonymous') + '</div>' +
+      '<div class="ptime">' + (post.time || 'just now') + '</div></div>' +
+    '</div>' +
+    '<div class="pcont">' + post.content + '</div>' +
+    '<div class="pstats"><span>❤️ ' + (post.likes||0).toLocaleString() + '</span><span>💬 ' + (post.comments||0) + '</span><span>👀 ' + ((post.likes||0)*12).toLocaleString() + '</span></div>' +
+    '<div class="prwb" id="b_' + post.id + '"></div>';
+
+  fc.insertBefore(card, fc.firstChild);
+  currentPosts.unshift(post);
+}
+
+// ── CREATOR ──
+function setMode(m, btn) {
+  mode = m;
+  document.querySelectorAll('.mbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('spanel').className = m === 's' ? 'spanel' : 'spanel off';
+  document.getElementById('cpanel').className = m === 'c' ? 'cpanel on' : 'cpanel';
+}
+
+function selType(el) {
+  document.querySelectorAll('.topt').forEach(e => e.classList.remove('sel'));
+  el.classList.add('sel'); postType = el.dataset.t;
+}
+
+function selContent(t) {
+  contentType = t;
+  const cr = document.getElementById('cr-real'), ct = document.getElementById('cr-trap');
+  const ir = document.getElementById('ci-real'), it = document.getElementById('ci-trap');
+  if (t === 'real') {
+    cr.className='crow cr'; ir.className='cind on'; ct.className='crow'; it.className='cind';
+    document.getElementById('pubBtn').textContent = '📤 PUBLISH (-€5)';
+  } else {
+    ct.className='crow ct'; it.className='cind on'; cr.className='crow'; ir.className='cind';
+    document.getElementById('pubBtn').textContent = '😈 SET TRAP (-€10)';
+  }
+}
+
+function setTrap(a) { trapStake = a; document.getElementById('trapV').textContent = '€' + a; }
+
+async function publishPost() {
+  const content = document.getElementById('postTxt').value.trim() ||
+    (contentType === 'trap' ? 'Something special is in here… dare to open it? 😏' : 'Found a huge opportunity in the feed 💰');
+  const res = await api('/posts/create', 'POST', {
+    type: postType, content, isTrap: contentType === 'trap', trapStake
+  });
+  if (res.error) { showToast('❌ ' + res.error); return; }
+  currentUser.balance = res.newBalance;
+  document.getElementById('balD').textContent = '€' + res.newBalance.toLocaleString();
+  updateRep(res.newReputation);
+  addMyPost(res.post);
+  showToast(contentType === 'trap' ? '😈 Trap is live!' : '✅ Post published!');
+  document.getElementById('postTxt').value = '';
+  addActivity('<strong>You</strong> ' + (contentType==='trap' ? 'set a <span class="trap-c">TRAP</span> 😈' : 'published a post'));
+}
+
+async function sendDM() {
+  const target = document.getElementById('dmTgt').value;
+  const message = document.getElementById('dmTxt').value.trim() ||
+    'Hey… the next post in your feed is a guaranteed jackpot. Open it now. Trust me 😏';
+  const res = await api('/dm/send', 'POST', { targetUsername: target, message });
+  if (res.error) { showToast('❌ ' + res.error); return; }
+  currentUser.balance = res.newBalance;
+  document.getElementById('balD').textContent = '€' + res.newBalance.toLocaleString();
+  updateRep(res.newReputation);
+  showToast('✉️ DM sent to ' + target + '!');
+  document.getElementById('dmTxt').value = '';
+  addActivity('<strong>You</strong> sent a <span class="trap-c">DM troll</span> to <strong>' + target + '</strong>');
+
+  // Simulate response after delay
+  setTimeout(async () => {
+    const r2 = await api('/user/me');
+    if (r2.user) {
+      currentUser = r2.user;
+      document.getElementById('balD').textContent = '€' + r2.user.balance.toLocaleString();
+      updateRep(r2.user.reputation);
+    }
+  }, 5000);
+}
+
+// ── INCOMING DM ──
+const DM_MSGS = [
+  s => `<strong>${s}</strong> here. Been watching for hours. The <strong>3rd post from top is a jackpot</strong>. Open before it expires. 🤫`,
+  s => `Bro, <strong>${s}</strong> told me — hidden multiplier active now. <strong>Open next trending post</strong>. Real talk.`,
+  s => `This is <strong>${s}</strong>. Just made €800 on a news post. Still time. <strong>Open it.</strong>`,
+];
+const DM_NAMES = ['Alex K.','Maria S.','BigBet Tom','LuckyJan','GoldRush88'];
+
+function showInDM() {
+  const sender = DM_NAMES[Math.floor(Math.random() * DM_NAMES.length)];
+  dmIsTrap = Math.random() < 0.6;
+  dmSenderId = sender;
+  document.getElementById('dmFrom').textContent = 'From: ' + sender;
+  document.getElementById('dmMsg').innerHTML = DM_MSGS[Math.floor(Math.random() * DM_MSGS.length)](sender);
+  document.getElementById('dmOv').classList.add('show');
+}
+
+async function respondDM(trusted) {
+  document.getElementById('dmOv').classList.remove('show');
+  const res = await api('/dm/respond', 'POST', { dmId: 'dm_0', trusted });
+  if (res.error) return;
+  currentUser.balance = res.newBalance;
+  document.getElementById('balD').textContent = '€' + res.newBalance.toLocaleString();
+  updateRep(res.newReputation);
+  if (trusted && res.wasTrap) addActivity('<strong>You</strong> trusted a <span class="loss">DM trap</span>! -€' + Math.abs(res.balanceChange));
+  else if (trusted && !res.wasTrap) addActivity('<strong>DM tip was real!</strong> <span class="win">+€' + res.balanceChange + '</span>');
+  else addActivity('<strong>You</strong> wisely ignored a DM from ' + dmSenderId);
+}
+
+// ── ACTIVITY ──
+const A_NAMES = ['Alex K.','Maria S.','BigBet Tom','LuckyJan','Pro_Dealer','NightOwl','FastFold'];
+const A_ICONS = ['🎰','💀','🔥','👁️','⚡','😈','🎯'];
+const A_MSGS = [
+  (n,a) => `<strong>${n}</strong> opened a post → <span class="win">+€${a}</span>`,
+  (n,a) => `<strong>${n}</strong> got <span class="loss">SCAMMED</span> → -€${a}`,
+  (n,a) => `<strong>${n}</strong> hit JACKPOT → <span class="win">+€${a}</span>`,
+  (n)   => `<strong>${n}</strong> is scrolling… depth <span class="win">${Math.floor(Math.random()*5+2)}</span>`,
+  (n)   => `<strong>${n}</strong> <span class="trap-c">set a trap</span> 😈`,
+];
+
+function addActivity(custom) {
+  const n = A_NAMES[Math.floor(Math.random() * A_NAMES.length)];
+  const a = Math.floor(Math.random() * 300 + 20);
+  const ico = A_ICONS[Math.floor(Math.random() * A_ICONS.length)];
+  const txt = custom || A_MSGS[Math.floor(Math.random() * A_MSGS.length)](n, a);
+  const el = document.createElement('div');
+  el.className = 'aitem';
+  el.innerHTML = '<div class="aico">' + ico + '</div><div><div class="atxt">' + txt + '</div><div class="atm">just now</div></div>';
+  const f = document.getElementById('actF');
+  f.insertBefore(el, f.firstChild);
+  if (f.children.length > 14) f.removeChild(f.lastChild);
+}
+
+function seedActivity() { for (let i = 0; i < 7; i++) addActivity(null); }
+
+// ── LEADERBOARD ──
+async function loadLeaderboard() {
+  const res = await api('/leaderboard');
+  if (res.error || !res.leaderboard) return;
+  const lb = document.getElementById('lbL');
+  lb.innerHTML = res.leaderboard.map((p, i) =>
+    '<div class="lbrow">' +
+      '<div class="lbrank ' + (i===0?'gld':'') + '">' + (i===0?'🥇':i+1) + '</div>' +
+      '<div><div class="lbname">' + p.username + '</div><div style="font-size:9px;color:#555">⭐ ' + p.reputation + ' rep</div></div>' +
+      '<div class="lbamt">€' + p.balance.toLocaleString() + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+// ── MY POSTS ──
+async function loadMyPosts() {
+  const res = await api('/posts/mine');
+  if (res.error || !res.posts || res.posts.length === 0) return;
+  res.posts.forEach(p => addMyPost(p));
+}
+
+function addMyPost(post) {
+  const list = document.getElementById('mpL');
+  const empty = list.querySelector('div[style]');
+  if (empty) empty.remove();
+  const el = document.createElement('div');
+  el.className = 'mprow';
+  el.innerHTML =
+    '<div class="mpttl">' + (post.isTrap?'😈':'💬') + ' ' + post.content.replace(/<[^>]+>/g,'').substring(0,40) + '…</div>' +
+    '<div class="mpst">' +
+      '<span>👁️ ' + (post.opens||0) + ' opens</span>' +
+      '<span style="color:' + (post.isTrap?'var(--danger)':'var(--accent)') + '">€' + (post.earnings||0) + ' earned</span>' +
+      '<span>' + (post.isTrap?'⚠️ Trap':'✅ Real') + '</span>' +
+    '</div>';
+  list.insertBefore(el, list.firstChild);
+}
+
+// ── STATS ──
+async function loadStats() {
+  const res = await api('/game/stats');
+  if (res.error) return;
+  document.getElementById('st-rounds').textContent = res.totalRounds || 0;
+  document.getElementById('st-wr').textContent = (res.winRate || 0) + '%';
+  document.getElementById('st-won').textContent = '€' + (res.totalWon || 0);
+  document.getElementById('st-lost').textContent = '€' + (res.totalLost || 0);
+  document.getElementById('st-big').textContent = '€' + (res.biggestWin || 0);
+}
+
+// ── SSE LIVE EVENTS ──
+function connectSSE() {
+  try {
+    const es = new EventSource(API + '/events');
+    es.onopen = () => {
+      document.getElementById('connBadge').textContent = '● LIVE';
+      document.getElementById('connBadge').className = 'conn-badge';
+    };
+    es.onmessage = (e) => {
+      try {
+        const evt = JSON.parse(e.data);
+        if (evt.type === 'activity' && evt.data) addActivity(evt.data.message);
+        if (evt.type === 'connected') {
+          const cnt = evt.data.onlineCount;
+          document.getElementById('onlineC').textContent = cnt.toLocaleString() + ' online';
+        }
+      } catch {}
+    };
+    es.onerror = () => {
+      document.getElementById('connBadge').textContent = '● OFFLINE';
+      document.getElementById('connBadge').className = 'conn-badge off';
+    };
+  } catch {}
+}
+
+// ── MISC ──
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  el.classList.add('active'); document.getElementById(id).classList.add('active');
+  if (id === 'lbSec') loadLeaderboard();
+  if (id === 'statSec') loadStats();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+let onlineCount = 2847;
+setInterval(() => {
+  onlineCount += Math.floor(Math.random() * 20) - 8;
+  onlineCount = Math.max(2500, Math.min(3200, onlineCount));
+  document.getElementById('onlineC').textContent = onlineCount.toLocaleString() + ' online';
+}, 3000);
+
+setInterval(() => { if (Math.random() > 0.4) addActivity(null); }, 3500);
+
+// ── INIT ──
+tryAutoLogin();
+</script>
+</body>
+</html>
