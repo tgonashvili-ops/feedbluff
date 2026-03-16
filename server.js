@@ -82,7 +82,7 @@ function sanitizeUser(u) {
   return safe;
 }
 
-// ── RNG — 97% RTP (Industry Standard) ──
+// ── RNG — 95% RTP | House Edge 5% ──
 class RNGService {
   static generateOutcome(userId, scrollDepth) {
     const serverSeed = crypto.randomBytes(16).toString('hex');
@@ -92,9 +92,9 @@ class RNGService {
       .update(clientSeed + ':' + nonce).digest('hex');
     const val = parseInt(hash.slice(0,8), 16) / 0xFFFFFFFF;
 
-    // ── 97% RTP Mathematics ──
-    // House Edge = 3%
-    // Scroll depth slightly increases jackpot AND scam chance (push-your-luck)
+    // ── 95% RTP Mathematics ──
+    // House Edge = 5%
+    // Scroll depth increases jackpot AND scam chance (push-your-luck)
     const depthBonus = Math.min(scrollDepth * 0.008, 0.06);
 
     // Thresholds (cumulative)
@@ -116,14 +116,14 @@ class RNGService {
       serverSeedHash: crypto.createHash('sha256').update(serverSeed).digest('hex'),
       clientSeed,
       nonce,
-      rtp: 97
+      rtp: 95
     };
   }
 
   static calculatePayout(type, bet, multiplier) {
     switch(type) {
-      case 'jackpot': return Math.round(bet * multiplier * 3) - bet;
-      case 'win':     return Math.round(bet * multiplier * 1.2) - bet;
+      case 'jackpot': return Math.round(bet * multiplier * 2.8) - bet;
+      case 'win':     return Math.round(bet * multiplier * 1.1) - bet;
       case 'troll':   return -Math.round(bet * 0.2);
       case 'scam':    return -bet;
       default:        return 0;
@@ -206,7 +206,33 @@ class GameService {
     if (!round) return { error: 'No active round — scroll first!' };
 
     const rng = RNGService.generateOutcome(userId, round.scrollDepth);
-    const change = RNGService.calculatePayout(rng.outcomeType, bet, round.multiplier);
+    let change = RNGService.calculatePayout(rng.outcomeType, bet, round.multiplier);
+
+    // ── P2P TRAP LOGIC ──
+    // If player opened a Trap post and LOST:
+    //   20% of bet → Trap author
+    //   75% → RTP pool (other players)
+    //   5%  → Casino (House Edge)
+    // If player opened a Trap post and WON:
+    //   Trap author loses €5 fee (already paid)
+    //   Winner gets payout from RTP pool normally
+    // Casino keeps €5 fee in ALL scenarios
+    const lastPost = DB.posts.filter(p => p.creatorId !== userId && p.isActive).slice(-1)[0];
+    if (lastPost && lastPost.isTrap && change < 0) {
+      // Trap worked! Pay author 20% of bet
+      const trapReward = Math.round(bet * 0.20);
+      const trapAuthor = DB.users.get(lastPost.creatorId);
+      if (trapAuthor) {
+        trapAuthor.balance += trapReward;
+        lastPost.earnings += trapReward;
+        broadcastEvent('activity', {
+          message: '<strong>' + trapAuthor.username + '</strong> Trap worked! +€' + trapReward + ' 😈'
+        });
+      }
+      lastPost.opens++;
+    } else if (lastPost && lastPost.isPlayerPost) {
+      lastPost.opens++;
+    }
 
     user.balance = Math.max(0, user.balance + change);
 
@@ -298,7 +324,7 @@ class GameService {
       totalWon: wins.reduce((s,t) => s + t.amount, 0),
       totalLost: losses.reduce((s,t) => s + t.amount, 0),
       biggestWin: wins.length > 0 ? Math.max(...wins.map(t => t.amount)) : 0,
-      rtp: 97
+      rtp: 95
     };
   }
 }
@@ -308,7 +334,9 @@ class PostService {
   static create(userId, data) {
     const user = DB.users.get(userId);
     if (!user) return { error: 'User not found' };
-    const fee = data.isTrap ? 10 : 5;
+    // Trap fee = €5, Real post fee = €2
+    // Casino keeps fee always (all scenarios)
+    const fee = data.isTrap ? 5 : 2;
     if (user.balance < fee) return { error: 'Need €' + fee + ' to publish' };
     user.balance -= fee;
     const repChange = data.isTrap ? -2 : 3;
@@ -439,7 +467,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Health
-  if (p === '/api/health') return send(res,200,{status:'ok',users:DB.users.size,rounds:DB.rounds.length,rtp:'97%',uptime:Math.floor(process.uptime())+'s'});
+  if (p === '/api/health') return send(res,200,{status:'ok',users:DB.users.size,rounds:DB.rounds.length,rtp:'95%',uptime:Math.floor(process.uptime())+'s'});
 
   // Leaderboard (public)
   if (p === '/api/leaderboard' && req.method==='GET') {
@@ -511,7 +539,7 @@ server.listen(PORT, () => {
   console.log('║   🎮 FeedBluff Server — Final Demo        ║');
   console.log(`║   http://localhost:${PORT}                  ║`);
   console.log('╠══════════════════════════════════════════╣');
-  console.log('║   RTP: 97%  |  House Edge: 3%            ║');
+  console.log('║   RTP: 95%  |  House Edge: 5%            ║');
   console.log('║   Demo balance: €5,000 per user          ║');
   console.log('╠══════════════════════════════════════════╣');
   console.log('║   Login: GoldRush88 / demo123            ║');
