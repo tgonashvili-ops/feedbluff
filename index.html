@@ -506,11 +506,11 @@ button:disabled{opacity:.35;cursor:not-allowed!important;}
         <textarea class="ptarea" id="postTxt" placeholder="Write your post… be convincing or deceptive 😈"></textarea>
         <div class="crow cr" id="cr-real" onclick="selContent('real')">
           <div class="cind on" id="ci-real"></div>
-          <div><strong>Real Post</strong> — Fee €5. Share rewards.</div>
+          <div><strong>Real Post</strong> — Fee €2. Share rewards.</div>
         </div>
         <div class="crow" id="cr-trap" onclick="selContent('trap')">
           <div class="cind" id="ci-trap"></div>
-          <div><strong>Trap 😈</strong> — Fee €10. Earn from victims.</div>
+          <div><strong>Trap 😈</strong> — Fee €5. Earn from victims.</div>
         </div>
         <button class="pub-btn" id="pubBtn" onclick="publishPost()">📤 PUBLISH (−€5)</button>
       </div>
@@ -912,7 +912,7 @@ function selContent(t) {
     document.getElementById('pubBtn').textContent='📤 PUBLISH (−€5)';
   } else {
     ct.className='crow ct';it.className='cind on';cr.className='crow';ir.className='cind';
-    document.getElementById('pubBtn').textContent='😈 SET TRAP (−€10)';
+    document.getElementById('pubBtn').textContent='😈 SET TRAP (−€5)';
   }
 }
 
