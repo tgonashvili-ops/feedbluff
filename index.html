@@ -512,7 +512,7 @@ button:disabled{opacity:.35;cursor:not-allowed!important;}
           <div class="cind" id="ci-trap"></div>
           <div><strong>Trap 😈</strong> — Fee €5. Earn from victims.</div>
         </div>
-        <button class="pub-btn" id="pubBtn" onclick="publishPost()">📤 PUBLISH (−€5)</button>
+        <button class="pub-btn" id="pubBtn" onclick="publishPost()">📤 PUBLISH (−€2)</button>
       </div>
 
       <div class="ptitle">DM Troll</div>
@@ -909,7 +909,7 @@ function selContent(t) {
   const ir=document.getElementById('ci-real'),it=document.getElementById('ci-trap');
   if(t==='real'){
     cr.className='crow cr';ir.className='cind on';ct.className='crow';it.className='cind';
-    document.getElementById('pubBtn').textContent='📤 PUBLISH (−€5)';
+    document.getElementById('pubBtn').textContent='📤 PUBLISH (−€2)';
   } else {
     ct.className='crow ct';it.className='cind on';cr.className='crow';ir.className='cind';
     document.getElementById('pubBtn').textContent='😈 SET TRAP (−€5)';
